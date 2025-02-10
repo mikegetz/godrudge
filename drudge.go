@@ -3,13 +3,22 @@ package drudge
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MGuitar24/go-drudge/color"
 	"github.com/MGuitar24/go-drudge/printer"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 )
+
+type Client struct {
+	BaseURL    string
+	HTTPClient *http.Client
+	Page       Page
+	dom        *goquery.Document
+}
 
 type Page struct {
 	Title           string
@@ -20,6 +29,15 @@ type Page struct {
 type Headline struct {
 	Title string
 	Color color.Color
+}
+
+func NewClient() *Client {
+	return &Client{
+		BaseURL: "https://www.drudgereport.com",
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
 }
 
 func (c *Client) fetch() error {
