@@ -15,8 +15,6 @@ func CenterText(text string, columns int) string {
 	width, _ := getTerminalWidth()
 
 	// Calculate padding
-	// re := regexp.MustCompile(`\033\[[0-9;]*m`)
-	// colorlessText := re.ReplaceAllString(text, "")
 	columnWidth := width / columns
 	padding := (columnWidth - len(text)) / 2
 	if padding < 0 {
