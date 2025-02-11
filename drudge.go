@@ -114,7 +114,7 @@ func (c *Client) parseTopHeadlines() error {
 	c.Page.Title = title
 
 	// Find the <font> block that contains the main headline
-	mainHeadlineNode := c.dom.Find("body").Find("tt").Find(`font[size="+7"]`).First().Get(0)
+	mainHeadlineNode := findMainHeadlineNode(c.dom)
 
 	headlineText := extractTextWithNewlines(mainHeadlineNode)
 
@@ -156,6 +156,31 @@ func (c *Client) PrintHeadlines() {
 			}
 		}
 	}
+}
+
+func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
+	bodyNode := dom.Find("body").Get(0)
+
+	var traverseFirstTree func(*html.Node) *html.Node
+	traverseFirstTree = func(node *html.Node) *html.Node {
+		if node.Type == html.CommentNode && strings.Contains(node.Data, "MAIN HEADLINE") {
+			return node
+		}
+		for c := node.FirstChild; c != nil; c = c.NextSibling {
+			if result := traverseFirstTree(c); result != nil {
+				return result
+			}
+		}
+		return nil
+	}
+
+	var result *html.Node
+	for c := bodyNode.FirstChild; c != nil; c = c.NextSibling {
+		if result = traverseFirstTree(c); result != nil {
+			break
+		}
+	}
+	return result
 }
 
 func extractTextWithNewlines(n *html.Node) string {
