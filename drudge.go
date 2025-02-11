@@ -75,21 +75,13 @@ func (c *Client) parseHeadlines() error {
 	}
 	headlineColumns := [][]Headline{}
 	ttNodes := c.dom.Find("body").Find("center").Find("table").Find("tt")
+	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
 	for count := 0; count < 3; count++ {
 		headlinesNode := ttNodes.Get(count)
-		headlineText := extractTextWithNewlines(headlinesNode)
+		headlineStrings := extractTextWithNewlines(headlinesNode, columnStopLines[count])
 
 		headlines := []Headline{}
-		headlineTextGroups := strings.Split(headlineText, "<hr>")
-		if count == 2 {
-			//drop last 8 headline text groups in 3rd column
-			headlineTextGroups = headlineTextGroups[:len(headlineTextGroups)-8]
-		} else {
-			//drop last headline text group
-			headlineTextGroups = headlineTextGroups[:len(headlineTextGroups)-1]
-		}
-		headlineText = strings.Join(headlineTextGroups, "<br>")
-		for _, headline := range strings.Split(headlineText, "<br>") {
+		for _, headline := range headlineStrings {
 			if len(headline) > 0 {
 				headlines = append(headlines, Headline{Title: headline, Color: color.Blue})
 			}
@@ -113,12 +105,9 @@ func (c *Client) parseTopHeadlines() error {
 	title := c.dom.Find("title").Text()
 	c.Page.Title = title
 
-	// Find the <font> block that contains the main headline
 	mainHeadlineNode := findMainHeadlineNode(c.dom)
 
-	headlineText := extractTextWithNewlines(mainHeadlineNode)
-
-	headlines := strings.Split(headlineText, "<br>")
+	headlines := extractTextWithNewlines(mainHeadlineNode, "MAINHEADLINEENDHERE")
 
 	for _, headline := range headlines {
 		c.Page.TopHeadlines = append(c.Page.TopHeadlines, Headline{Title: headline, Color: color.Blue})
@@ -180,26 +169,36 @@ func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
 			break
 		}
 	}
-	return result
+	return result.Parent
 }
 
-func extractTextWithNewlines(n *html.Node) string {
+func extractTextWithNewlines(n *html.Node, stopNodeText string) []string {
 	var buf bytes.Buffer
 
-	var traverse func(*html.Node)
-	traverse = func(node *html.Node) {
-		if node.Type == html.TextNode {
+	var traverse func(*html.Node) bool
+	traverse = func(node *html.Node) bool {
+		if node.Type == html.CommentNode {
+			if strings.Contains(strings.TrimSpace(strings.ReplaceAll(node.Data, " ", "")), stopNodeText) {
+				return false
+			}
+		} else if node.Type == html.TextNode {
 			buf.WriteString(strings.TrimSpace(node.Data))
 		} else if node.Data == "br" {
 			buf.WriteString("<br>")
 		} else if node.Data == "hr" {
-			buf.WriteString("<hr>")
+			buf.WriteString("<br>")
 		}
+
 		for c := node.FirstChild; c != nil; c = c.NextSibling {
-			traverse(c)
+			if !traverse(c) {
+				return false
+			}
 		}
+		return true
 	}
 	traverse(n)
 
-	return strings.TrimSpace(buf.String())
+	columnHeadlineString := strings.TrimSpace(buf.String())
+
+	return strings.Split(columnHeadlineString, "<br>")
 }

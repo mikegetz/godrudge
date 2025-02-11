@@ -24,19 +24,7 @@ func CenterText(text string, columns int) string {
 	// Return centered text
 	centered := strings.Repeat(" ", padding) + text
 	if columnWidth < len(centered) {
-
-		truncatedText := centered[:columnWidth-3]
-		trimmedTruncatedText := strings.TrimSpace(truncatedText)
-
-		untrimmedLength := len(truncatedText)
-		trimmedLength := len(trimmedTruncatedText)
-
-		ellipsesGap := 0
-		if trimmedLength < untrimmedLength {
-			ellipsesGap = untrimmedLength - trimmedLength
-		}
-
-		centered = strings.TrimSpace(centered[:columnWidth-3]) + strings.Repeat(".", ellipsesGap) + "..."
+		centered = centered[:columnWidth-3] + "..."
 	} else if len(centered) < columnWidth {
 		centered = centered + strings.Repeat(" ", columnWidth-len(centered))
 	}
