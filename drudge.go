@@ -1,4 +1,4 @@
-package drudge
+package godrudge
 
 import (
 	"bytes"
@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MGuitar24/go-drudge/color"
-	"github.com/MGuitar24/go-drudge/printer"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 )
@@ -28,7 +26,7 @@ type Page struct {
 
 type Headline struct {
 	Title string
-	Color color.Color
+	Color Color
 }
 
 func NewClient() *Client {
@@ -74,16 +72,16 @@ func (c *Client) parseHeadlines() error {
 		}
 	}
 	headlineColumns := [][]Headline{}
-	ttNodes := c.dom.Find("body").Find("center").Find("table").Find("tt")
+	subHeadlineStartNodeSelection := findSubHeadlineNodeStartSelection(c.dom)
 	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
 	for count := 0; count < 3; count++ {
-		headlinesNode := ttNodes.Get(count)
+		headlinesNode := subHeadlineStartNodeSelection.Get(0)
 		headlineStrings := extractTextWithNewlines(headlinesNode, columnStopLines[count])
 
 		headlines := []Headline{}
 		for _, headline := range headlineStrings {
 			if len(headline) > 0 {
-				headlines = append(headlines, Headline{Title: headline, Color: color.Blue})
+				headlines = append(headlines, Headline{Title: headline, Color: Blue})
 			}
 		}
 
@@ -110,21 +108,21 @@ func (c *Client) parseTopHeadlines() error {
 	headlines := extractTextWithNewlines(mainHeadlineNode, "MAINHEADLINEENDHERE")
 
 	for _, headline := range headlines {
-		c.Page.TopHeadlines = append(c.Page.TopHeadlines, Headline{Title: headline, Color: color.Blue})
+		c.Page.TopHeadlines = append(c.Page.TopHeadlines, Headline{Title: headline, Color: Blue})
 	}
 
 	return nil
 }
 
 func (c *Client) PrintHeadlines() {
-	fmt.Println(printer.HorizontalRule(1))
-	fmt.Print(printer.CenterText(c.Page.Title, 1))
+	fmt.Println(horizontalRule(1))
+	fmt.Print(centerText(c.Page.Title, 1))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.TopHeadlines {
-		fmt.Print(color.ColorString(headline.Color, printer.CenterText(headline.Title, 1)))
+		fmt.Print(colorString(headline.Color, centerText(headline.Title, 1)))
 	}
 	fmt.Print(strings.Repeat("\n", 2))
-	fmt.Println(printer.HorizontalRule(1))
+	fmt.Println(horizontalRule(1))
 
 	// Find max column count (length of longest inner slice)
 	maxCols := 0
@@ -139,9 +137,9 @@ func (c *Client) PrintHeadlines() {
 		for row := 0; row < len(c.Page.HeadlineColumns); row++ {
 			if column < len(c.Page.HeadlineColumns[row]) { // Avoid out-of-bounds access
 				headline := c.Page.HeadlineColumns[row][column]
-				fmt.Print(color.ColorString(headline.Color, printer.CenterText(headline.Title, 3)))
+				fmt.Print(colorString(headline.Color, centerText(headline.Title, 3)))
 			} else {
-				fmt.Print(printer.RowGap(3))
+				fmt.Print(rowGap(3))
 			}
 		}
 	}
@@ -170,6 +168,10 @@ func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
 		}
 	}
 	return result.Parent
+}
+
+func findSubHeadlineNodeStartSelection(dom *goquery.Document) (s *goquery.Selection) {
+	return dom.Find("body").Find("center").Find("table").Find("tt")
 }
 
 func extractTextWithNewlines(n *html.Node, stopNodeText string) []string {

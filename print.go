@@ -1,4 +1,4 @@
-package printer
+package godrudge
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"golang.org/x/term"
 )
 
-func CenterText(text string, columns int) string {
+func centerText(text string, columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
@@ -31,7 +31,7 @@ func CenterText(text string, columns int) string {
 	return centered
 }
 
-func HorizontalRule(columns int) string {
+func horizontalRule(columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
@@ -41,7 +41,7 @@ func HorizontalRule(columns int) string {
 	return strings.Repeat("-", (width / columns))
 }
 
-func RowGap(columns int) string {
+func rowGap(columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
