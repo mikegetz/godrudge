@@ -76,7 +76,7 @@ func (c *Client) parseHeadlines() error {
 	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
 	for count := 0; count < 3; count++ {
 		headlinesNode := subHeadlineStartNodeSelection.Get(count)
-		headlineStrings := extractTextWithNewlines(headlinesNode, columnStopLines[count])
+		headlineStrings := extractHeadlines(headlinesNode, columnStopLines[count])
 
 		headlines := []Headline{}
 		for _, headline := range headlineStrings {
@@ -105,7 +105,7 @@ func (c *Client) parseTopHeadlines() error {
 
 	mainHeadlineNode := findMainHeadlineNode(c.dom)
 
-	headlines := extractTextWithNewlines(mainHeadlineNode, "MAINHEADLINEENDHERE")
+	headlines := extractHeadlines(mainHeadlineNode, "MAINHEADLINEENDHERE")
 
 	for _, headline := range headlines {
 		c.Page.TopHeadlines = append(c.Page.TopHeadlines, Headline{Title: headline, Color: Blue})
@@ -174,7 +174,8 @@ func findSubHeadlineNodeStartSelection(dom *goquery.Document) (s *goquery.Select
 	return dom.Find("body").Find("center").Find("table").Find("tt")
 }
 
-func extractTextWithNewlines(n *html.Node, stopNodeText string) []string {
+// Extracts all headlines as h from startNode to stopNodeText
+func extractHeadlines(startNode *html.Node, stopNodeText string) (h []string) {
 	var buf bytes.Buffer
 
 	var traverse func(*html.Node) bool
@@ -198,7 +199,7 @@ func extractTextWithNewlines(n *html.Node, stopNodeText string) []string {
 		}
 		return true
 	}
-	traverse(n)
+	traverse(startNode)
 
 	columnHeadlineString := strings.TrimSpace(buf.String())
 
