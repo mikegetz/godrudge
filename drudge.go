@@ -75,7 +75,7 @@ func (c *Client) parseHeadlines() error {
 	subHeadlineStartNodeSelection := findSubHeadlineNodeStartSelection(c.dom)
 	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
 	for count := 0; count < 3; count++ {
-		headlinesNode := subHeadlineStartNodeSelection.Get(0)
+		headlinesNode := subHeadlineStartNodeSelection.Get(count)
 		headlineStrings := extractTextWithNewlines(headlinesNode, columnStopLines[count])
 
 		headlines := []Headline{}
