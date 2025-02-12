@@ -30,13 +30,19 @@ type Headline struct {
 	Color Color
 }
 
-func NewClient() *Client {
-	return &Client{
+// provide a client override
+func NewClient(c ...*http.Client) *Client {
+	defaultClient := &Client{
 		BaseURL: "https://www.drudgereport.com",
 		HTTPClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
 	}
+	for _, clientOverride := range c {
+		defaultClient.HTTPClient = clientOverride
+	}
+
+	return defaultClient
 }
 
 func (c *Client) fetch() error {
