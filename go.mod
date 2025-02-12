@@ -1,4 +1,4 @@
-module github.com/MGuitar24/go-drudge
+module github.com/MGuitar24/godrudge
 
 go 1.23.3
 
