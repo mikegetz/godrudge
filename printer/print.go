@@ -11,7 +11,7 @@ func CenterText(text string, columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
-	// Get terminal width
+
 	width, _ := getTerminalWidth()
 
 	// Calculate padding
