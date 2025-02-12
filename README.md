@@ -8,14 +8,20 @@ Example Usage:
 package main
 
 import (
-	"github.com/MGuitar24/go-drudge"
+	"fmt"
+
+	"github.com/MGuitar24/godrudge"
 )
 
 func main() {
-	client := drudge.NewClient()
-	client.Parse()
+	client := godrudge.NewClient()
+	err := client.Parse()
+	if err != nil {
+		fmt.Println("Error parsing", err)
+	}
 	client.PrintHeadlines()
 }
+
 
 ```
 
