@@ -3,52 +3,58 @@ package godrudge
 import (
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/term"
 )
 
-func centerText(text string, columns int) string {
-	if columns < 1 {
-		columns = 1
+// Align text based on column style
+func alignText(text string, width int, alignment string) string {
+	textLength := utf8.RuneCountInString(text)
+	if textLength >= width {
+		return text // If text is too long, return as is
 	}
 
-	width, _ := getTerminalWidth()
+	totalPadding := width - textLength
 
-	// Calculate padding
-	columnWidth := width / columns
-	padding := (columnWidth - len(text)) / 2
-	if padding < 0 {
-		padding = 0 // Avoid negative padding if text is wider than the terminal
+	switch alignment {
+	case "left": // Padding at the end (right side)
+		return text + strings.Repeat(" ", totalPadding)
+	case "center": // Padding split evenly
+		leftPadding := totalPadding / 2
+		rightPadding := totalPadding - leftPadding
+		return strings.Repeat(" ", leftPadding) + text + strings.Repeat(" ", rightPadding)
+	case "right": // Padding at the front (left side)
+		return strings.Repeat(" ", totalPadding) + text
+	default:
+		return text // Fallback (should not happen)
 	}
-
-	// Return centered text
-	centered := strings.Repeat(" ", padding) + text
-	if columnWidth < len(centered) {
-		centered = centered[:columnWidth-3] + "..."
-	} else if len(centered) < columnWidth {
-		centered = centered + strings.Repeat(" ", columnWidth-len(centered))
-	}
-	return centered
 }
 
-func horizontalRule(columns int) string {
+func truncateLine(text string, maxLength int) string {
+	if utf8.RuneCountInString(text) > maxLength {
+		return text[:maxLength] + "..."
+	}
+	return text
+}
+
+func horizontalRule(terminalWidth int, columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
-	width, _ := getTerminalWidth()
 
 	// Return horizontal rule
-	return strings.Repeat("-", (width / columns))
+	return strings.Repeat("-", (terminalWidth / columns))
 }
 
-func rowGap(columns int) string {
+// Create a row gap based on the number of columns
+func rowGap(terminalWidth int, columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
-	width, _ := getTerminalWidth()
 
 	// Return row gap
-	return strings.Repeat(" ", (width / columns))
+	return strings.Repeat(" ", (terminalWidth / columns))
 }
 
 func getTerminalWidth() (int, error) {
