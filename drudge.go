@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -111,35 +112,62 @@ func (c *Client) parseTopHeadlines() error {
 	return nil
 }
 
-func (c *Client) PrintHeadlines() {
-	fmt.Println(horizontalRule(1))
-	fmt.Print(centerText(c.Page.Title, 1))
+func printDrudgeHeader(c *Client, terminalWidth int) {
+	fmt.Println(horizontalRule(terminalWidth, 1))
+	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.TopHeadlines {
-		fmt.Print(colorString(headline.Color, centerText(headline.Title, 1)))
+		fmt.Print(colorString(headline.Color, alignText(headline.Title, terminalWidth, "center")))
 	}
 	fmt.Print(strings.Repeat("\n", 2))
-	fmt.Println(horizontalRule(1))
+	fmt.Println(horizontalRule(terminalWidth, 1))
+}
 
-	// Find max column count (length of longest inner slice)
-	maxCols := 0
-	for _, column := range c.Page.HeadlineColumns {
-		if len(column) > maxCols {
-			maxCols = len(column)
+func printDrudgeBody(c *Client, terminalWidth int) {
+	numColumns := len(c.Page.HeadlineColumns)
+
+	colWidth := terminalWidth / numColumns
+
+	truncateWidth := colWidth - 3
+
+	// Determine the maximum number of rows
+	maxRows := 0
+	for _, col := range c.Page.HeadlineColumns {
+		if len(col) > maxRows {
+			maxRows = len(col)
 		}
 	}
 
-	// Iterate column by column
-	for column := 0; column < maxCols; column++ {
-		for row := 0; row < len(c.Page.HeadlineColumns); row++ {
-			if column < len(c.Page.HeadlineColumns[row]) { // Avoid out-of-bounds access
-				headline := c.Page.HeadlineColumns[row][column]
-				fmt.Print(colorString(headline.Color, centerText(headline.Title, 3)))
+	for row := 0; row < maxRows; row++ {
+		var line strings.Builder
+		for column := 0; column < numColumns; column++ {
+			var headline string
+			if row < len(c.Page.HeadlineColumns[column]) {
+				headline = truncateLine(c.Page.HeadlineColumns[column][row].Title, truncateWidth)
+
+				alignment := "left"
+				if column == 1 {
+					alignment = "center"
+				} else if column == 2 {
+					alignment = "right"
+				}
+
+				headline = alignText(headline, colWidth, alignment)
+				headline = colorString(c.Page.HeadlineColumns[column][row].Color, headline)
 			} else {
-				fmt.Print(rowGap(3))
+				headline = rowGap(terminalWidth, 3)
 			}
+
+			line.WriteString(headline)
 		}
+		fmt.Fprintln(os.Stdout, line.String())
 	}
+}
+
+func (c *Client) PrintDrudge() {
+	terminalWidth, _ := getTerminalWidth()
+	printDrudgeHeader(c, terminalWidth)
+	printDrudgeBody(c, terminalWidth)
 }
 
 func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
