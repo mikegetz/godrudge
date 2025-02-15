@@ -2,9 +2,7 @@ package godrudge
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -122,69 +120,6 @@ func (c *Client) PrintDrudge(textOnly bool) {
 	printDrudgeBody(c, terminalWidth, textOnly)
 }
 
-func printDrudgeHeader(c *Client, terminalWidth int, textOnly bool) {
-	fmt.Println(horizontalRule(terminalWidth, 1))
-	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
-	fmt.Print(strings.Repeat("\n", 2))
-	for _, headline := range c.Page.TopHeadlines {
-		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
-		if textOnly {
-			fmt.Print(coloredHeadline)
-		} else {
-			fmt.Print(ansiLink(headline.Href, coloredHeadline))
-		}
-	}
-	fmt.Print(strings.Repeat("\n", 2))
-	fmt.Println(horizontalRule(terminalWidth, 1))
-}
-
-func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
-	numColumns := len(c.Page.HeadlineColumns)
-
-	colWidth := terminalWidth / numColumns
-
-	truncateWidth := colWidth - 3
-
-	// Determine the maximum number of rows
-	maxRows := 0
-	for _, col := range c.Page.HeadlineColumns {
-		if len(col) > maxRows {
-			maxRows = len(col)
-		}
-	}
-
-	for row := 0; row < maxRows; row++ {
-		var line strings.Builder
-		for column := 0; column < numColumns; column++ {
-			var headline string
-			if row < len(c.Page.HeadlineColumns[column]) {
-				headline = truncateLine(c.Page.HeadlineColumns[column][row].Title, truncateWidth)
-
-				alignment := "left"
-				if column == 1 {
-					alignment = "center"
-				} else if column == 2 {
-					alignment = "right"
-				}
-
-				headline = alignText(headline, colWidth, alignment)
-				coloredHeadline := colorString(c.Page.HeadlineColumns[column][row].Color, headline)
-				if textOnly {
-					headline = coloredHeadline
-				} else {
-					headline = ansiLink(c.Page.HeadlineColumns[column][row].Href, coloredHeadline)
-				}
-
-			} else {
-				headline = rowGap(terminalWidth, 3)
-			}
-
-			line.WriteString(headline)
-		}
-		fmt.Fprintln(os.Stdout, line.String())
-	}
-}
-
 func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
 	bodyNode := dom.Find("body").Get(0)
 
@@ -221,18 +156,6 @@ func extractNodeAttr(n *html.Node, attrKey string) string {
 		}
 	}
 	return ""
-}
-
-// returns a subslice of the slice arr where start is the index to start on
-// removing every other index and returning the resulting slice
-func sliceEveryOther[T any](arr []T, start int) []T {
-	newIndexCount := 0
-	for count := start; count < len(arr); count += 2 {
-		arr[newIndexCount] = arr[count]
-		newIndexCount++
-	}
-	arr = arr[:newIndexCount]
-	return arr
 }
 
 // Extracts all headlines as h from startNode to stopNodeText
