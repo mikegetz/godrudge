@@ -112,24 +112,32 @@ func (c *Client) parseHeadlines() error {
 	return nil
 }
 
-func (c *Client) PrintDrudge() {
+// Print Drudge
+// Prints drudge page to stdout
+// textOnly - prints to stdout without ansi links
+func (c *Client) PrintDrudge(textOnly bool) {
 	terminalWidth, _ := getTerminalWidth()
-	printDrudgeHeader(c, terminalWidth)
-	printDrudgeBody(c, terminalWidth)
+	printDrudgeHeader(c, terminalWidth, textOnly)
+	printDrudgeBody(c, terminalWidth, textOnly)
 }
 
-func printDrudgeHeader(c *Client, terminalWidth int) {
+func printDrudgeHeader(c *Client, terminalWidth int, textOnly bool) {
 	fmt.Println(horizontalRule(terminalWidth, 1))
 	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.TopHeadlines {
-		fmt.Print(ansiLink(headline.Href, colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))))
+		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
+		if textOnly {
+			fmt.Print(coloredHeadline)
+		} else {
+			fmt.Print(ansiLink(headline.Href, coloredHeadline))
+		}
 	}
 	fmt.Print(strings.Repeat("\n", 2))
 	fmt.Println(horizontalRule(terminalWidth, 1))
 }
 
-func printDrudgeBody(c *Client, terminalWidth int) {
+func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
 	numColumns := len(c.Page.HeadlineColumns)
 
 	colWidth := terminalWidth / numColumns
@@ -159,7 +167,13 @@ func printDrudgeBody(c *Client, terminalWidth int) {
 				}
 
 				headline = alignText(headline, colWidth, alignment)
-				headline = ansiLink(c.Page.HeadlineColumns[column][row].Href, colorString(c.Page.HeadlineColumns[column][row].Color, headline))
+				coloredHeadline := colorString(c.Page.HeadlineColumns[column][row].Color, headline)
+				if textOnly {
+					headline = coloredHeadline
+				} else {
+					headline = ansiLink(c.Page.HeadlineColumns[column][row].Href, coloredHeadline)
+				}
+
 			} else {
 				headline = rowGap(terminalWidth, 3)
 			}
