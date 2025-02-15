@@ -1,6 +1,8 @@
 DISCLAIMER:
 
-This project is just a fun project and is not an official client to Drudge. The implementation is fragile since it relies on parsing the HTML DOM of the website which has no strict contract unlike an API. A small change to the website can easily break this.
+This project is an independent, unofficial implementation and is not affiliated with or endorsed by Drudge. It is provided for educational and experimental purposes only.
+
+Please note that this implementation relies on parsing the website’s HTML DOM, which, unlike a formal API, does not adhere to a fixed contract. As a result, any modifications to the website’s structure may cause the implementation to break. Users should be aware of these limitations when using this package.
 
 Example Usage:
 
