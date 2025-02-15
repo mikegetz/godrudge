@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"slices"
 	"strings"
 	"time"
 
@@ -28,6 +27,7 @@ type Page struct {
 
 type Headline struct {
 	Title string
+	Href  string
 	Color Color
 }
 
@@ -72,26 +72,6 @@ func (c *Client) Parse() error {
 	return nil
 }
 
-func (c *Client) parseHeadlines() error {
-	if c.dom == nil {
-		err := c.fetch()
-		if err != nil {
-			return err
-		}
-	}
-	headlineColumns := [][]Headline{}
-	subHeadlineStartNodeSelection := findSubHeadlineNodeStartSelection(c.dom)
-	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
-	for count := 0; count < 3; count++ {
-		headlinesNode := subHeadlineStartNodeSelection.Get(count)
-		headlines := extractHeadlines(headlinesNode, columnStopLines[count])
-		headlineColumns = append(headlineColumns, headlines)
-	}
-
-	c.Page.HeadlineColumns = headlineColumns
-	return nil
-}
-
 func (c *Client) parseTopHeadlines() error {
 	if c.dom == nil {
 		err := c.fetch()
@@ -112,12 +92,38 @@ func (c *Client) parseTopHeadlines() error {
 	return nil
 }
 
+func (c *Client) parseHeadlines() error {
+	if c.dom == nil {
+		err := c.fetch()
+		if err != nil {
+			return err
+		}
+	}
+	headlineColumns := [][]Headline{}
+	subHeadlineStartNodeSelection := findSubHeadlineNodeStartSelection(c.dom)
+	columnStopLines := []string{"LINKSFIRSTCOLUMN", "LINKSSECONDCOLUMN", "LINKSANDSEARCHES3RDCOLUMN"}
+	for count := 0; count < 3; count++ {
+		headlinesNode := subHeadlineStartNodeSelection.Get(count)
+		headlines := extractHeadlines(headlinesNode, columnStopLines[count])
+		headlineColumns = append(headlineColumns, headlines)
+	}
+
+	c.Page.HeadlineColumns = headlineColumns
+	return nil
+}
+
+func (c *Client) PrintDrudge() {
+	terminalWidth, _ := getTerminalWidth()
+	printDrudgeHeader(c, terminalWidth)
+	printDrudgeBody(c, terminalWidth)
+}
+
 func printDrudgeHeader(c *Client, terminalWidth int) {
 	fmt.Println(horizontalRule(terminalWidth, 1))
 	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.TopHeadlines {
-		fmt.Print(colorString(headline.Color, alignText(headline.Title, terminalWidth, "center")))
+		fmt.Print(ansiLink(headline.Href, colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))))
 	}
 	fmt.Print(strings.Repeat("\n", 2))
 	fmt.Println(horizontalRule(terminalWidth, 1))
@@ -153,7 +159,7 @@ func printDrudgeBody(c *Client, terminalWidth int) {
 				}
 
 				headline = alignText(headline, colWidth, alignment)
-				headline = colorString(c.Page.HeadlineColumns[column][row].Color, headline)
+				headline = ansiLink(c.Page.HeadlineColumns[column][row].Href, colorString(c.Page.HeadlineColumns[column][row].Color, headline))
 			} else {
 				headline = rowGap(terminalWidth, 3)
 			}
@@ -162,12 +168,6 @@ func printDrudgeBody(c *Client, terminalWidth int) {
 		}
 		fmt.Fprintln(os.Stdout, line.String())
 	}
-}
-
-func (c *Client) PrintDrudge() {
-	terminalWidth, _ := getTerminalWidth()
-	printDrudgeHeader(c, terminalWidth)
-	printDrudgeBody(c, terminalWidth)
 }
 
 func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
@@ -199,10 +199,33 @@ func findSubHeadlineNodeStartSelection(dom *goquery.Document) (s *goquery.Select
 	return dom.Find("body").Find("center").Find("table").Find("tt")
 }
 
+func extractNodeAttr(n *html.Node, attrKey string) string {
+	for _, attr := range n.Attr {
+		if attr.Key == attrKey {
+			return attr.Val
+		}
+	}
+	return ""
+}
+
+// returns a subslice of the slice arr where start is the index to start on
+// removing every other index and returning the resulting slice
+func sliceEveryOther[T any](arr []T, start int) []T {
+	newIndexCount := 0
+	for count := start; count < len(arr); count += 2 {
+		arr[newIndexCount] = arr[count]
+		newIndexCount++
+	}
+	arr = arr[:newIndexCount]
+	return arr
+}
+
 // Extracts all headlines as h from startNode to stopNodeText
 func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) {
 	var buf bytes.Buffer
-	const redTextPlaceholder = "<color:red>"
+	const redTextPlaceholder = "<color:{red}>"
+	const hrefPlaceholder = "<href>"
+	const noColorTextPlaceholder = "<color:{none}>"
 
 	var traverse func(*html.Node) bool
 	traverse = func(node *html.Node) bool {
@@ -212,18 +235,22 @@ func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) 
 			}
 		} else if node.Type == html.TextNode {
 			color := ""
+			href := ""
 			if node.Parent.Type == html.ElementNode && node.Parent.Data == "font" {
-				for _, attr := range node.Parent.Attr {
-					if attr.Key == "color" && strings.ToLower(attr.Val) == "red" {
-						color = redTextPlaceholder
-					}
+				colorVal := extractNodeAttr(node.Parent, "color")
+				if strings.ToLower(colorVal) == "red" {
+					color = redTextPlaceholder
 				}
+				if node.Parent.Parent.Type == html.ElementNode && node.Parent.Parent.Data == "a" {
+					href = hrefPlaceholder + extractNodeAttr(node.Parent.Parent, "href") + hrefPlaceholder
+				}
+			} else if node.Parent.Type == html.ElementNode && node.Parent.Data == "a" && strings.TrimSpace(node.Data) != "" {
+				color = noColorTextPlaceholder
 			}
-			buf.WriteString(color + strings.TrimSpace(node.Data) + color)
-		} else if node.Data == "br" {
-			buf.WriteString("<br>")
-		} else if node.Data == "hr" {
-			buf.WriteString("<br>")
+			if node.Parent.Type == html.ElementNode && node.Parent.Data == "a" {
+				href = hrefPlaceholder + extractNodeAttr(node.Parent, "href") + hrefPlaceholder
+			}
+			buf.WriteString(href + color + strings.TrimSpace(node.Data) + color)
 		}
 
 		for c := node.FirstChild; c != nil; c = c.NextSibling {
@@ -237,40 +264,22 @@ func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) 
 
 	columnHeadlineString := strings.TrimSpace(buf.String())
 
-	headlineStrings := strings.Split(columnHeadlineString, "<br>")
+	colorHeadlineStrings := sliceEveryOther(strings.Split(columnHeadlineString, "<color:"), 1)
 
-	//remove indexes with empty strings
-	cleanedHeadlineStrings := slices.DeleteFunc(headlineStrings, func(s string) bool {
-		return s == ""
-	})
-	//split cleaned headlines to get just red headlines based on redTextPlaceholder
-	redHeadlineStrings := strings.Split(strings.Join(cleanedHeadlineStrings, ""), redTextPlaceholder)
-
-	if len(redHeadlineStrings) == 1 {
-		redHeadlineStrings = make([]string, 0)
-	} else if len(redHeadlineStrings) > 1 {
-		//red headlines only exist in every odd index ie. 1, 3, 5 etc. trimming the array to remove all even indexes 0, 2, 4 etc.
-		newIndexCount := 0
-		for count := 1; count < len(redHeadlineStrings); count += 2 {
-			redHeadlineStrings[newIndexCount] = redHeadlineStrings[count]
-			newIndexCount++
-		}
-		redHeadlineStrings = redHeadlineStrings[:newIndexCount]
-	}
+	hrefHeadlineURLs := sliceEveryOther(strings.Split(columnHeadlineString, hrefPlaceholder), 1)
 
 	coloredHeadlines := []Headline{}
+	for index, colorHeadlineString := range colorHeadlineStrings {
+		blueHeadlineString := strings.Split(colorHeadlineString, "{none}>")
+		if len(blueHeadlineString) > 1 {
+			coloredHeadlines = append(coloredHeadlines, Headline{Title: blueHeadlineString[1], Color: Blue, Href: hrefHeadlineURLs[index]})
+		}
 
-	//add all cleanedHeadlines to coloredHeadlines
-	for _, blueHeadlineString := range cleanedHeadlineStrings {
-		coloredHeadlines = append(coloredHeadlines, Headline{Title: blueHeadlineString, Color: Blue})
-	}
+		redHeadlineString := strings.Split(colorHeadlineString, "{red}>")
+		if len(redHeadlineString) > 1 {
+			coloredHeadlines = append(coloredHeadlines, Headline{Title: redHeadlineString[1], Color: Red, Href: hrefHeadlineURLs[index]})
+		}
 
-	//replace blue headlines with red headlines to maintain headline order
-	for _, redHeadline := range redHeadlineStrings {
-		indexOfRedHeadline := slices.IndexFunc(coloredHeadlines, func(h Headline) bool {
-			return strings.Contains(h.Title, redHeadline)
-		})
-		coloredHeadlines[indexOfRedHeadline] = Headline{Title: redHeadline, Color: Red}
 	}
 
 	return coloredHeadlines
