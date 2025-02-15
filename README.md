@@ -6,6 +6,8 @@ Please note that this implementation relies on parsing the website’s HTML DOM,
 
 Example Usage:
 
+Prints Drudge to stdout with ANSI links.
+
 ```
 package main
 
@@ -21,7 +23,9 @@ func main() {
 	if err != nil {
 		fmt.Println("Error parsing", err)
 	}
-	client.PrintDrudge()
+	
+	// set to true to print without ANSI links
+	client.PrintDrudge(false)
 }
 
 

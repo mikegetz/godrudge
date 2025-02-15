@@ -114,6 +114,7 @@ func (c *Client) parseHeadlines() error {
 
 // Print Drudge
 // Prints drudge page to stdout
+//
 // textOnly - prints to stdout without ansi links
 func (c *Client) PrintDrudge(textOnly bool) {
 	terminalWidth, _ := getTerminalWidth()
