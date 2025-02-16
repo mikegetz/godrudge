@@ -1,0 +1,5 @@
+package godrudge
+
+func parseRSS() {
+
+}
