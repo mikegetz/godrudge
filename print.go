@@ -9,11 +9,23 @@ import (
 	"golang.org/x/term"
 )
 
-func printDrudgeHeader(c *Client, terminalWidth int, textOnly bool) {
+func printDrudgeTopHeadlines(c *Client, terminalWidth int, textOnly bool) {
+	for _, headline := range c.Page.TopHeadlines {
+		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "left"))
+		if textOnly {
+			fmt.Print(coloredHeadline)
+		} else {
+			fmt.Print(ansiLink(headline.Href, coloredHeadline))
+		}
+	}
+	fmt.Print(strings.Repeat("\n", 2))
+}
+
+func printDrudgeMainHeadlines(c *Client, terminalWidth int, textOnly bool) {
 	fmt.Println(horizontalRule(terminalWidth, 1))
 	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
-	for _, headline := range c.Page.TopHeadlines {
+	for _, headline := range c.Page.MainHeadlines {
 		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
 		if textOnly {
 			fmt.Print(coloredHeadline)
