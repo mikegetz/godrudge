@@ -101,6 +101,10 @@ func (c *Client) ParseRSS() error {
 		}
 	}
 	//TODO: parseRSS use c.rssFeed
+	err := c.parseRSS()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
