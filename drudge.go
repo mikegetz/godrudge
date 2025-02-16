@@ -2,6 +2,7 @@ package godrudge
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ type Client struct {
 type Page struct {
 	Title           string
 	TopHeadlines    []Headline
+	MainHeadlines   []Headline
 	HeadlineColumns [][]Headline
 }
 
@@ -63,6 +65,10 @@ func (c *Client) Parse() error {
 	if err != nil {
 		return err
 	}
+	err = c.parseMainHeadlines()
+	if err != nil {
+		return err
+	}
 	err = c.parseHeadlines()
 	if err != nil {
 		return err
@@ -78,6 +84,23 @@ func (c *Client) parseTopHeadlines() error {
 		}
 	}
 
+	topHeadlineNode := findTopHeadlineNode(c.dom)
+
+	headlines := extractHeadlines(topHeadlineNode, "TOPLEFTHEADLINESENDHERE")
+
+	c.Page.TopHeadlines = append(c.Page.TopHeadlines, headlines...)
+
+	return nil
+}
+
+func (c *Client) parseMainHeadlines() error {
+	if c.dom == nil {
+		err := c.fetch()
+		if err != nil {
+			return err
+		}
+	}
+
 	title := c.dom.Find("title").Text()
 	c.Page.Title = title
 
@@ -85,7 +108,7 @@ func (c *Client) parseTopHeadlines() error {
 
 	headlines := extractHeadlines(mainHeadlineNode, "MAINHEADLINEENDHERE")
 
-	c.Page.TopHeadlines = append(c.Page.TopHeadlines, headlines...)
+	c.Page.MainHeadlines = append(c.Page.MainHeadlines, headlines...)
 
 	return nil
 }
@@ -116,8 +139,36 @@ func (c *Client) parseHeadlines() error {
 // textOnly - prints to stdout without ansi links
 func (c *Client) PrintDrudge(textOnly bool) {
 	terminalWidth, _ := getTerminalWidth()
-	printDrudgeHeader(c, terminalWidth, textOnly)
+	printDrudgeTopHeadlines(c, terminalWidth, textOnly)
+	printDrudgeMainHeadlines(c, terminalWidth, textOnly)
 	printDrudgeBody(c, terminalWidth, textOnly)
+}
+
+func findTopHeadlineNode(dom *goquery.Document) (n *html.Node) {
+	bodyNode := dom.Find("body").Get(0)
+	var traverseFirstTree func(*html.Node) *html.Node
+	traverseFirstTree = func(node *html.Node) *html.Node {
+		if node.Type == html.CommentNode && strings.Contains(strings.ReplaceAll(node.Data, " ", ""), "TOPLEFTSTARTSHERE") {
+			return node
+		}
+		for c := node.FirstChild; c != nil; c = c.NextSibling {
+			if result := traverseFirstTree(c); result != nil {
+				return result
+			}
+		}
+		return nil
+	}
+
+	var result *html.Node
+	for c := bodyNode.FirstChild; c != nil; c = c.NextSibling {
+		if result = traverseFirstTree(c); result != nil {
+			break
+		}
+	}
+
+	fmt.Println(result.Parent.Data)
+
+	return result.Parent
 }
 
 func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
@@ -125,7 +176,7 @@ func findMainHeadlineNode(dom *goquery.Document) (n *html.Node) {
 
 	var traverseFirstTree func(*html.Node) *html.Node
 	traverseFirstTree = func(node *html.Node) *html.Node {
-		if node.Type == html.CommentNode && strings.Contains(node.Data, "MAIN HEADLINE") {
+		if node.Type == html.CommentNode && strings.Contains(strings.ReplaceAll(node.Data, " ", ""), "MAINHEADLINE") {
 			return node
 		}
 		for c := node.FirstChild; c != nil; c = c.NextSibling {
