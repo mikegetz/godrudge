@@ -165,9 +165,10 @@ func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) 
 	const hrefPlaceholder = "<href>"
 	const noColorTextPlaceholder = "<color:{none}>"
 
-	var traverse func(*html.Node) bool
-	traverse = func(node *html.Node) bool {
+	var traverse func(*html.Node, *html.Node) bool
+	traverse = func(node *html.Node, lastAnchor *html.Node) bool {
 		if node.Type == html.CommentNode {
+			//if we are on a comment node that matches a stopNodeText exit recursion
 			if strings.Contains(strings.TrimSpace(strings.ReplaceAll(node.Data, " ", "")), stopNodeText) {
 				return false
 			}
@@ -181,28 +182,26 @@ func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) 
 				if strings.ToLower(colorVal) == "red" {
 					color = redTextPlaceholder
 				}
-			} else if node.Parent.Type == html.ElementNode && (node.Parent.Data == "i" || node.Parent.Data == "a") {
+			} else {
 				color = noColorTextPlaceholder
 			}
 
 			//set url
-			if node.Parent.Type == html.ElementNode && node.Parent.Data == "a" {
-				href = hrefPlaceholder + extractNodeAttr(node.Parent, "href") + hrefPlaceholder
-			} else if node.Parent.Parent.Type == html.ElementNode && node.Parent.Parent.Data == "a" {
-				href = hrefPlaceholder + extractNodeAttr(node.Parent.Parent, "href") + hrefPlaceholder
-			}
+			href = hrefPlaceholder + extractNodeAttr(lastAnchor, "href") + hrefPlaceholder
 
 			buf.WriteString(href + color + strings.TrimSpace(node.Data) + color)
+		} else if node.Type == html.ElementNode && node.Data == "a" {
+			lastAnchor = node
 		}
 
 		for c := node.FirstChild; c != nil; c = c.NextSibling {
-			if !traverse(c) {
+			if !traverse(c, lastAnchor) {
 				return false
 			}
 		}
 		return true
 	}
-	traverse(startNode)
+	traverse(startNode, nil)
 
 	columnHeadlineString := strings.TrimSpace(buf.String())
 
