@@ -32,15 +32,10 @@ func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
 
 	truncateWidth := colWidth - 3
 
-	// Determine the maximum number of rows
-	maxRows := 0
-	for _, col := range c.Page.HeadlineColumns {
-		if len(col) > maxRows {
-			maxRows = len(col)
-		}
-	}
+	// Determine the maximum column size
+	maxColumnSize := determineMaximumColumnSize(c.Page.HeadlineColumns)
 
-	for row := 0; row < maxRows; row++ {
+	for row := 0; row < maxColumnSize; row++ {
 		var line strings.Builder
 		for column := 0; column < numColumns; column++ {
 			var headline string

@@ -11,3 +11,13 @@ func sliceEveryOther[T any](arr []T, start int) []T {
 	arr = arr[:newIndexCount]
 	return arr
 }
+
+func determineMaximumColumnSize[T any](columns [][]T) int {
+	maxRows := 0
+	for _, col := range columns {
+		if len(col) > maxRows {
+			maxRows = len(col)
+		}
+	}
+	return maxRows
+}

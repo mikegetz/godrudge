@@ -171,23 +171,27 @@ func extractHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) 
 			if strings.Contains(strings.TrimSpace(strings.ReplaceAll(node.Data, " ", "")), stopNodeText) {
 				return false
 			}
-		} else if node.Type == html.TextNode {
+		} else if node.Type == html.TextNode && strings.TrimSpace(node.Data) != "" {
 			color := ""
 			href := ""
+
+			//set color
 			if node.Parent.Type == html.ElementNode && node.Parent.Data == "font" {
 				colorVal := extractNodeAttr(node.Parent, "color")
 				if strings.ToLower(colorVal) == "red" {
 					color = redTextPlaceholder
 				}
-				if node.Parent.Parent.Type == html.ElementNode && node.Parent.Parent.Data == "a" {
-					href = hrefPlaceholder + extractNodeAttr(node.Parent.Parent, "href") + hrefPlaceholder
-				}
-			} else if node.Parent.Type == html.ElementNode && node.Parent.Data == "a" && strings.TrimSpace(node.Data) != "" {
+			} else if node.Parent.Type == html.ElementNode && (node.Parent.Data == "i" || node.Parent.Data == "a") {
 				color = noColorTextPlaceholder
 			}
+
+			//set url
 			if node.Parent.Type == html.ElementNode && node.Parent.Data == "a" {
 				href = hrefPlaceholder + extractNodeAttr(node.Parent, "href") + hrefPlaceholder
+			} else if node.Parent.Parent.Type == html.ElementNode && node.Parent.Parent.Data == "a" {
+				href = hrefPlaceholder + extractNodeAttr(node.Parent.Parent, "href") + hrefPlaceholder
 			}
+
 			buf.WriteString(href + color + strings.TrimSpace(node.Data) + color)
 		}
 
