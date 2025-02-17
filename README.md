@@ -28,7 +28,7 @@ import (
 
 func main() {
     client := godrudge.NewClient()
-    err := client.Parse()
+    err := client.ParseRSS()
     if err != nil {
         fmt.Println("Error parsing", err)
     }
@@ -62,7 +62,7 @@ import (
 
 func main() {
     client := godrudge.NewClient()
-    err := client.Parse()
+    err := client.ParseRSS()
     if err != nil {
         fmt.Println("Error parsing", err)
     }
