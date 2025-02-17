@@ -23,7 +23,7 @@ package main
 import (
     "fmt"
 
-    "github.com/MGuitar24/godrudge"
+    "github.com/mikegetz/godrudge"
 )
 
 func main() {
@@ -57,7 +57,7 @@ package main
 import (
     "fmt"
 
-    "github.com/MGuitar24/godrudge"
+    "github.com/mikegetz/godrudge"
 )
 
 func main() {
