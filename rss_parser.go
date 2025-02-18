@@ -5,15 +5,16 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mikegetz/godrudge/color"
 	"golang.org/x/net/html"
 )
 
 const (
-	TopHeadline          = "top headline"
-	MainHeadline         = "main headline"
-	FirstColumnHeadline  = "first column"
-	SecondColumnHeadline = "second column"
-	ThirdColumnHeadline  = "third column"
+	topHeadline          = "top headline"
+	mainHeadline         = "main headline"
+	firstColumnHeadline  = "first column"
+	secondColumnHeadline = "second column"
+	thirdColumnHeadline  = "third column"
 )
 
 func (c *Client) parseRSS() error {
@@ -21,21 +22,27 @@ func (c *Client) parseRSS() error {
 	c.Page.HeadlineColumns = make([][]Headline, 3)
 	for _, item := range feed.Items {
 		if item.PublishedParsed != nil {
-			headline := Headline{Title: item.Title, Href: item.Link, Color: Blue}
-			headlineType, err := c.getHeadlineType(item.Description)
+			var headlineColor color.Color
+			if isRed, _ := isFeedHeadlineRed(item.Description); isRed {
+				headlineColor = color.Red
+			} else {
+				headlineColor = color.Blue
+			}
+			headline := Headline{Title: item.Title, Href: item.Link, Color: headlineColor}
+			headlineType, err := getFeedHeadlineType(item.Description)
 			if err != nil {
-				return nil
+				return err
 			}
 			switch headlineType {
-			case TopHeadline:
+			case topHeadline:
 				c.Page.TopHeadlines = append(c.Page.TopHeadlines, headline)
-			case MainHeadline:
+			case mainHeadline:
 				c.Page.MainHeadlines = append(c.Page.MainHeadlines, headline)
-			case FirstColumnHeadline:
+			case firstColumnHeadline:
 				c.Page.HeadlineColumns[0] = append(c.Page.HeadlineColumns[0], headline)
-			case SecondColumnHeadline:
+			case secondColumnHeadline:
 				c.Page.HeadlineColumns[1] = append(c.Page.HeadlineColumns[1], headline)
-			case ThirdColumnHeadline:
+			case thirdColumnHeadline:
 				c.Page.HeadlineColumns[2] = append(c.Page.HeadlineColumns[2], headline)
 			default:
 				return fmt.Errorf("failure parsing RSS headlines")
@@ -45,7 +52,38 @@ func (c *Client) parseRSS() error {
 	return nil
 }
 
-func (c *Client) getHeadlineType(description string) (string, error) {
+func isFeedHeadlineRed(description string) (bool, error) {
+	doc, err := html.Parse(strings.NewReader(description))
+	if err != nil {
+		return false, err
+	}
+	var traverseFirstTree func(*html.Node) bool
+	traverseFirstTree = func(node *html.Node) bool {
+		if node.Type == html.ElementNode && node.Data == "font" {
+			colorVal := extractNodeAttr(node, "color")
+			if strings.ToLower(colorVal) == "red" {
+				return true
+			}
+		}
+
+		for c := node.FirstChild; c != nil; c = c.NextSibling {
+			if traverseFirstTree(c) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for c := doc.FirstChild; c != nil; c = c.NextSibling {
+		if traverseFirstTree(c) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func getFeedHeadlineType(description string) (string, error) {
 	doc, err := html.Parse(strings.NewReader(description))
 	if err != nil {
 		return "", err
@@ -58,9 +96,9 @@ func (c *Client) getHeadlineType(description string) (string, error) {
 			headlineType := re.FindStringSubmatch(strings.ToLower(node.Data))[1]
 			switch headlineType {
 			case "top":
-				return TopHeadline
+				return topHeadline
 			case "main":
-				return MainHeadline
+				return mainHeadline
 			default:
 				return ""
 			}
@@ -69,11 +107,11 @@ func (c *Client) getHeadlineType(description string) (string, error) {
 			headlineType := re.FindStringSubmatch(strings.ToLower(node.Data))[1]
 			switch headlineType {
 			case "first":
-				return FirstColumnHeadline
+				return firstColumnHeadline
 			case "second":
-				return SecondColumnHeadline
+				return secondColumnHeadline
 			case "third":
-				return ThirdColumnHeadline
+				return thirdColumnHeadline
 			default:
 				return ""
 			}

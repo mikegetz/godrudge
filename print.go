@@ -6,16 +6,17 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/mikegetz/godrudge/color"
 	"golang.org/x/term"
 )
 
 func printDrudgeTopHeadlines(c *Client, terminalWidth int, textOnly bool) {
 	for _, headline := range c.Page.TopHeadlines {
-		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "left"))
+		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, terminalWidth, "left"))
 		if textOnly {
 			fmt.Print(coloredHeadline)
 		} else {
-			fmt.Print(ansiLink(headline.Href, coloredHeadline))
+			fmt.Print(color.AnsiLink(headline.Href, coloredHeadline))
 		}
 	}
 	fmt.Print(strings.Repeat("\n", 2))
@@ -26,11 +27,11 @@ func printDrudgeMainHeadlines(c *Client, terminalWidth int, textOnly bool) {
 	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.MainHeadlines {
-		coloredHeadline := colorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
+		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
 		if textOnly {
 			fmt.Print(coloredHeadline)
 		} else {
-			fmt.Print(ansiLink(headline.Href, coloredHeadline))
+			fmt.Print(color.AnsiLink(headline.Href, coloredHeadline))
 		}
 	}
 	fmt.Print(strings.Repeat("\n", 2))
@@ -62,11 +63,11 @@ func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
 				}
 
 				headline = alignText(headline, colWidth, alignment)
-				coloredHeadline := colorString(c.Page.HeadlineColumns[column][row].Color, headline)
+				coloredHeadline := color.ColorString(c.Page.HeadlineColumns[column][row].Color, headline)
 				if textOnly {
 					headline = coloredHeadline
 				} else {
-					headline = ansiLink(c.Page.HeadlineColumns[column][row].Href, coloredHeadline)
+					headline = color.AnsiLink(c.Page.HeadlineColumns[column][row].Href, coloredHeadline)
 				}
 
 			} else {
