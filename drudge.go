@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mikegetz/godrudge/color"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -27,7 +28,7 @@ type Page struct {
 type Headline struct {
 	Title string
 	Href  string
-	Color Color
+	Color color.Color
 }
 
 // provide a client override

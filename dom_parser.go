@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mikegetz/godrudge/color"
 	"golang.org/x/net/html"
 )
 
@@ -101,15 +102,6 @@ func findDOMSubHeadlineNodeStartSelection(dom *goquery.Document) (s *goquery.Sel
 	return dom.Find("body").Find("center").Find("table").Find("tt")
 }
 
-func extractNodeAttr(n *html.Node, attrKey string) string {
-	for _, attr := range n.Attr {
-		if attr.Key == attrKey {
-			return attr.Val
-		}
-	}
-	return ""
-}
-
 // Extracts all headlines as h from startNode to stopNodeText
 func extractDOMHeadlines(startNode *html.Node, stopNodeText string) (h []Headline) {
 	var buf bytes.Buffer
@@ -165,12 +157,12 @@ func extractDOMHeadlines(startNode *html.Node, stopNodeText string) (h []Headlin
 	for index, colorHeadlineString := range colorHeadlineStrings {
 		blueHeadlineString := strings.Split(colorHeadlineString, "{none}>")
 		if len(blueHeadlineString) > 1 {
-			coloredHeadlines = append(coloredHeadlines, Headline{Title: blueHeadlineString[1], Color: Blue, Href: hrefHeadlineURLs[index]})
+			coloredHeadlines = append(coloredHeadlines, Headline{Title: blueHeadlineString[1], Color: color.Blue, Href: hrefHeadlineURLs[index]})
 		}
 
 		redHeadlineString := strings.Split(colorHeadlineString, "{red}>")
 		if len(redHeadlineString) > 1 {
-			coloredHeadlines = append(coloredHeadlines, Headline{Title: redHeadlineString[1], Color: Red, Href: hrefHeadlineURLs[index]})
+			coloredHeadlines = append(coloredHeadlines, Headline{Title: redHeadlineString[1], Color: color.Red, Href: hrefHeadlineURLs[index]})
 		}
 
 	}
