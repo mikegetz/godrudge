@@ -12,6 +12,7 @@ func sliceEveryOther[T any](arr []T, start int) []T {
 	return arr
 }
 
+// finds the maximum length out of all inner slices
 func determineMaximumColumnSize[T any](columns [][]T) int {
 	maxRows := 0
 	for _, col := range columns {
