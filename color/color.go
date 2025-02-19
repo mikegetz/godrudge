@@ -16,6 +16,7 @@ func ColorString(c Color, s string) string {
 	return string(c) + s + string(Reset)
 }
 
+// AnsiLink creates an ANSI hyperlink with the given href and text.
 func AnsiLink(href string, s string) string {
 	return hrefStart + href + hrefEnd + s + hrefTextEnd
 }
