@@ -9,7 +9,7 @@
 
 This project is an independent, unofficial implementation and is not affiliated with or endorsed by Drudge. It is provided for educational and experimental purposes only.
 
-Please note that this implementation relies on parsing the website’s HTML DOM, which, unlike a formal API, does not adhere to a fixed contract. As a result, any modifications to the website’s structure may cause the implementation to break. Users should be aware of these limitations when using this package.
+Please note that this implementation relies on parsing the website's current HTML DOM and the unofficial [feedburner RSS feed](http://feeds.feedburner.com/DrudgeReportFeed). While the RSS feed seems like a relatively stable contract to integrate with, most of the content exists within an HTML DOM object in the feed.  As a result, any modifications to the website’s structure may cause the implementation to break. Users should be aware of these limitations when using this module.
 
 ![image](https://github.com/user-attachments/assets/58a0f545-3f1a-480d-8106-ebf3425b502d)
 
