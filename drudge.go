@@ -114,8 +114,8 @@ func (c *Client) ParseRSS() error {
 //
 // textOnly - prints to stdout without ansi links
 func (c *Client) PrintDrudge(textOnly bool) {
-	terminalWidth, _ := getTerminalWidth()
-	printDrudgeTopHeadlines(c, terminalWidth, textOnly)
-	printDrudgeMainHeadlines(c, terminalWidth, textOnly)
-	printDrudgeBody(c, terminalWidth, textOnly)
+	printer := newPrinter()
+	printer.printDrudgeTopHeadlines(c, textOnly)
+	printer.printDrudgeMainHeadlines(c, textOnly)
+	printer.printDrudgeBody(c, textOnly)
 }

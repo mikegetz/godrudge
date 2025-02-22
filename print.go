@@ -10,9 +10,18 @@ import (
 	"golang.org/x/term"
 )
 
-func printDrudgeTopHeadlines(c *Client, terminalWidth int, textOnly bool) {
+type printer struct {
+	terminalWidth int
+}
+
+func newPrinter() *printer {
+	w, _ := getTerminalWidth()
+	return &printer{terminalWidth: w}
+}
+
+func (p *printer) printDrudgeTopHeadlines(c *Client, textOnly bool) {
 	for _, headline := range c.Page.TopHeadlines {
-		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, terminalWidth, "left"))
+		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, p.terminalWidth, "left"))
 		if textOnly {
 			fmt.Print(coloredHeadline)
 		} else {
@@ -22,12 +31,12 @@ func printDrudgeTopHeadlines(c *Client, terminalWidth int, textOnly bool) {
 	fmt.Print(strings.Repeat("\n", 2))
 }
 
-func printDrudgeMainHeadlines(c *Client, terminalWidth int, textOnly bool) {
-	fmt.Println(horizontalRule(terminalWidth, 1))
-	fmt.Print(alignText(c.Page.Title, terminalWidth, "center"))
+func (p *printer) printDrudgeMainHeadlines(c *Client, textOnly bool) {
+	fmt.Println(p.horizontalRule(1))
+	fmt.Print(alignText(c.Page.Title, p.terminalWidth, "center"))
 	fmt.Print(strings.Repeat("\n", 2))
 	for _, headline := range c.Page.MainHeadlines {
-		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, terminalWidth, "center"))
+		coloredHeadline := color.ColorString(headline.Color, alignText(headline.Title, p.terminalWidth, "center"))
 		if textOnly {
 			fmt.Print(coloredHeadline)
 		} else {
@@ -35,13 +44,13 @@ func printDrudgeMainHeadlines(c *Client, terminalWidth int, textOnly bool) {
 		}
 	}
 	fmt.Print(strings.Repeat("\n", 2))
-	fmt.Println(horizontalRule(terminalWidth, 1))
+	fmt.Println(p.horizontalRule(1))
 }
 
-func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
+func (p *printer) printDrudgeBody(c *Client, textOnly bool) {
 	numColumns := len(c.Page.HeadlineColumns)
 
-	colWidth := terminalWidth / numColumns
+	colWidth := p.terminalWidth / numColumns
 
 	truncateWidth := colWidth - 3
 
@@ -71,7 +80,7 @@ func printDrudgeBody(c *Client, terminalWidth int, textOnly bool) {
 				}
 
 			} else {
-				headline = rowGap(terminalWidth, 3)
+				headline = rowGap(p.terminalWidth, 3)
 			}
 
 			line.WriteString(headline)
@@ -110,13 +119,13 @@ func truncateLine(text string, maxLength int) string {
 	return text
 }
 
-func horizontalRule(terminalWidth int, columns int) string {
+func (p *printer) horizontalRule(columns int) string {
 	if columns < 1 {
 		columns = 1
 	}
 
 	// Return horizontal rule
-	return strings.Repeat("-", (terminalWidth / columns))
+	return strings.Repeat("-", (p.terminalWidth / columns))
 }
 
 // Create a row gap based on the number of columns
