@@ -28,7 +28,7 @@ func (c *Client) parseRSS() error {
 			} else {
 				headlineColor = color.Blue
 			}
-			headline := Headline{Title: item.Title, Href: item.Link, Color: headlineColor}
+			headline := Headline{Title: item.Title, Href: item.Link, Color: headlineColor, ColorTitle: string(headlineColor) + item.Title + string(color.Reset)}
 			headlineType, err := getFeedHeadlineType(item.Description)
 			if err != nil {
 				return err
