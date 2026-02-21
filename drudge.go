@@ -26,9 +26,10 @@ type Page struct {
 }
 
 type Headline struct {
-	Title string
-	Href  string
-	Color color.Color
+	Title      string
+	ColorTitle string
+	Href       string
+	Color      color.Color
 }
 
 // provide a client override
