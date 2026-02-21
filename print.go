@@ -91,21 +91,25 @@ func alignText(text string, width int, alignment string) string {
 
 	switch alignment {
 	case "left": // Padding at the end (right side)
-		return text + strings.Repeat(" ", totalPadding)
+		return fmt.Sprintf("%-*s", width, text) // Left-align using fmt
 	case "center": // Padding split evenly
 		leftPadding := totalPadding / 2
 		rightPadding := totalPadding - leftPadding
 		return strings.Repeat(" ", leftPadding) + text + strings.Repeat(" ", rightPadding)
 	case "right": // Padding at the front (left side)
-		return strings.Repeat(" ", totalPadding) + text
+		return fmt.Sprintf("%*s", width, text) // Right-align using fmt
 	default:
 		return text // Fallback (should not happen)
 	}
 }
 
 func truncateLine(text string, maxLength int) string {
-	if utf8.RuneCountInString(text) > maxLength {
-		return text[:maxLength] + "..."
+	if maxLength > 3 {
+		if utf8.RuneCountInString(text) > maxLength {
+			return text[:maxLength-3] + "..."
+		} else {
+			return text
+		}
 	}
 	return text
 }
@@ -126,7 +130,7 @@ func rowGap(terminalWidth int, columns int) string {
 	}
 
 	// Return row gap
-	return strings.Repeat(" ", (terminalWidth / columns))
+	return fmt.Sprintf("%*s", (terminalWidth / columns), "")
 }
 
 func getTerminalWidth() (int, error) {
