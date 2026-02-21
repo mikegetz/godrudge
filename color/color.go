@@ -11,7 +11,7 @@ const hrefStart = "\033]8;;"
 const hrefEnd = "\033\\"
 const hrefTextEnd = "\033]8;;\033\\"
 
-// adds Unicode color c to message string
+// adds ANSI color c to message string
 func ColorString(c Color, s string) string {
 	return string(c) + s + string(Reset)
 }
