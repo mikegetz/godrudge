@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mikegetz/godrudge/color"
+	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/net/html"
 )
 
@@ -22,13 +22,13 @@ func (c *Client) parseRSS() error {
 	c.Page.HeadlineColumns = make([][]Headline, 3)
 	for _, item := range feed.Items {
 		if item.PublishedParsed != nil {
-			var headlineColor color.Color
+			var headlineStyle lipgloss.Style
 			if isRed, _ := isFeedHeadlineRed(item.Description); isRed {
-				headlineColor = color.Red
+				headlineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
 			} else {
-				headlineColor = color.Blue
+				headlineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#0000FF"))
 			}
-			headline := Headline{Title: item.Title, Href: item.Link, Color: headlineColor, ColorTitle: string(headlineColor) + item.Title + string(color.Reset)}
+			headline := Headline{Title: item.Title, URL: item.Link, Style: headlineStyle}
 			headlineType, err := getFeedHeadlineType(item.Description)
 			if err != nil {
 				return err
@@ -133,4 +133,13 @@ func getFeedHeadlineType(description string) (string, error) {
 
 	return result, nil
 
+}
+
+func extractNodeAttr(n *html.Node, attrKey string) string {
+	for _, attr := range n.Attr {
+		if attr.Key == attrKey {
+			return attr.Val
+		}
+	}
+	return ""
 }
