@@ -1,11 +1,15 @@
 package godrudge
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
+// TODO: write real tests
 func TestPrint(t *testing.T) {
 	c := NewClient()
 	err := c.ParseRSS()
-	c.PrintDrudge(true)
+	fmt.Println(c.Page)
 	if err != nil {
 		t.Fatalf("Failed to parse RSS feed: %v", err)
 	}
