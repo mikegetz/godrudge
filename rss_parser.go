@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mmcdole/gofeed"
 	"golang.org/x/net/html"
 )
 
@@ -16,6 +17,16 @@ const (
 	secondColumnHeadline = "second column"
 	thirdColumnHeadline  = "third column"
 )
+
+func (c *Client) fetchRSS() error {
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseURL(c.rssFeedURL)
+	if err != nil {
+		return nil
+	}
+	c.rssFeed = feed
+	return nil
+}
 
 func (c *Client) parseRSS() error {
 	feed := c.rssFeed
