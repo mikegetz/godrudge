@@ -20,6 +20,8 @@ const (
 func (c *Client) parseRSS() error {
 	feed := c.rssFeed
 	c.Page.HeadlineColumns = make([][]Headline, 3)
+	c.Page.TopHeadlines = []Headline{}
+	c.Page.MainHeadlines = []Headline{}
 	for _, item := range feed.Items {
 		if item.PublishedParsed != nil {
 			var headlineStyle lipgloss.Style
