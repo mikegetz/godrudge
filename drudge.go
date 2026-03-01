@@ -23,12 +23,21 @@ type Headline struct {
 	Style lipgloss.Style
 }
 
-// provide a client override
 func NewClient() *Client {
+	return NewFeedPressClient()
+}
+
+func NewFeedPressClient() *Client {
+	c := &Client{
+		rssFeedURL: "https://feedpress.me/drudgereportfeed",
+	}
+	return c
+}
+
+func NewFeedBurnerClient() *Client {
 	c := &Client{
 		rssFeedURL: "http://feeds.feedburner.com/DrudgeReportFeed",
 	}
-
 	return c
 }
 
