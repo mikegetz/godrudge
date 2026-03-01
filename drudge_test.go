@@ -23,7 +23,12 @@ func TestMain(m *testing.M) {
 
 // this test is just to print
 func TestPrint(t *testing.T) {
-	fmt.Println(c.Page)
+	fmt.Println("Top Headlines:")
+	fmt.Println(c.Page.TopHeadlines)
+	fmt.Println("Main Headlines:")
+	fmt.Println(c.Page.MainHeadlines)
+	fmt.Println("Headline Columns:")
+	fmt.Println(c.Page.HeadlineColumns)
 }
 
 func TestColumnHeadlines(t *testing.T) {
