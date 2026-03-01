@@ -41,7 +41,7 @@ func (c *Client) parseRSS() error {
 			} else {
 				headlineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#5858fd"))
 			}
-			headline := Headline{Title: item.Title, URL: item.Link, Style: headlineStyle}
+			headline := Headline{Title: item.Title, URL: item.GUID, Style: headlineStyle}
 			headlineType, err := getFeedHeadlineType(item.Description)
 			if err != nil {
 				return err
