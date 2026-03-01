@@ -22,7 +22,7 @@ func (c *Client) fetchRSS() error {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(c.rssFeedURL)
 	if err != nil {
-		return nil
+		return err
 	}
 	c.rssFeed = feed
 	return nil
