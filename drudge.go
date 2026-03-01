@@ -21,6 +21,7 @@ type Headline struct {
 	Title string
 	URL   string
 	Style lipgloss.Style
+	IsRed bool
 }
 
 func NewClient() *Client {
