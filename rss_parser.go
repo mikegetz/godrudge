@@ -36,12 +36,13 @@ func (c *Client) parseRSS() error {
 	for _, item := range feed.Items {
 		if item.PublishedParsed != nil {
 			var headlineStyle lipgloss.Style
-			if isRed, _ := isFeedHeadlineRed(item.Description); isRed {
+			var isRed bool
+			if isRed, _ = isFeedHeadlineRed(item.Description); isRed {
 				headlineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff3c3c"))
 			} else {
 				headlineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#5858fd"))
 			}
-			headline := Headline{Title: item.Title, URL: item.GUID, Style: headlineStyle}
+			headline := Headline{Title: item.Title, URL: item.GUID, Style: headlineStyle, IsRed: isRed}
 			headlineType, err := getFeedHeadlineType(item.Description)
 			if err != nil {
 				return err
